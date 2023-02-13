@@ -5,9 +5,11 @@ import Footer from "@/components/layout/Footer";
 export default function Master({ children }:any) {
     return (
         <>
-            <Header/>
+            <div className="container">
+                <Header/>
                 {children}
-            <Footer/>
+                <Footer/>
+            </div>
         </>
     )
 }

@@ -1,6 +1,5 @@
 import axios from "axios";
 import {getCookie, hasCookie} from "cookies-next/lib";
-import {any} from "prop-types";
 
 const request = axios.create({
     baseURL: 'https://qltt.truongdang.online/api/v1/',
