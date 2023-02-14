@@ -1,109 +1,107 @@
-import * as request from "@/utils/api";
+import * as api from "@/utils/api";
 import React, {useEffect, useState} from "react"
-import {Table, Pagination, Checkbox} from 'rsuite';
-import 'rsuite/dist/rsuite.min.css'; // or 'rsuite/dist/rsuite.min.css'
+import Link from "next/link";
+import { Modal,IconButton, Button, ButtonToolbar, Placeholder } from 'rsuite';
 
-const { Column, HeaderCell, Cell } = Table;
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Index() {
-    const [articles,setArticles] = useState([]);
-    const [limit, setLimit] = React.useState(2);
-    const [page, setPage] = React.useState(1);
-    const handleChangeLimit = dataKey => {
-        setPage(1);
-        setLimit(dataKey);
+
+    const [open, setOpen] = React.useState(false);
+    const handleOpen = (e:any) => {
+        setItemIDDel(e.target.dataset.id)
+        setOpen(true)
     };
-    const data = articles.filter((v, i) => {
-        const start = limit * (page - 1);
-        const end = start + limit;
-        return i >= start && i < end;
-    });
+    const handleClose = () => setOpen(false);
+
+    const [articles, setArticles] = useState([]);
+    const [item_id_del,setItemIDDel] = useState(0);
+
+
     useEffect(() => {
-        request.get('article').then(res => {
+        api.get('items').then(res => {
             setArticles(res)
         })
-    },[])
-    const handleCheckAll = (value, checked) => {
-        const keys = checked ? articles.map(item => item.id) : [];
-        setCheckedKeys(keys);
-    };
-    const [checkedKeys, setCheckedKeys] = useState([]);
-    let checked = false;
-    let indeterminate = false;
+    }, [])
 
-    const CheckCell = ({ rowData, onChange, checkedKeys, dataKey, ...props }) => (
-        <Cell {...props} style={{ padding: 0 }}>
-            <div style={{ lineHeight: '46px' }}>
-                <Checkbox
-                    value={rowData[dataKey]}
-                    inline
-                    onChange={onChange}
-                    checked={checkedKeys.some(item => item === rowData[dataKey])}
-                />
-            </div>
-        </Cell>
-    );
-    if (checkedKeys.length === articles.length) {
-        checked = true;
-    } else if (checkedKeys.length === 0) {
-        checked = false;
-    } else if (checkedKeys.length > 0 && checkedKeys.length < articles.length) {
-        indeterminate = true;
+    const handleDelete = () => {
+        api.destroy(    `items/${item_id_del}`)
+            .then(res => {
+                if (res.status == 1) {
+                    setOpen(false)
+                    removeArticleArray(item_id_del)
+                    toast.success(res.message)
+                }
+            })
     }
-    const handleCheck = (value, checked) => {
-        const keys = checked ? [...checkedKeys, value] : checkedKeys.filter(item => item !== value);
-        setCheckedKeys(keys);
-    };
-    return <>
-        <Table
-            data={data}
-            bordered
-            cellBordered
-            autoHeight
-            affixHeader
-            affixHorizontalScrollbar
-        >
-            <Column width={50} align="center">
-                <HeaderCell style={{ padding: 0 }}>
-                    <div style={{ lineHeight: '40px' }}>
-                        <Checkbox
-                            inline
-                            checked={checked}
-                            indeterminate={indeterminate}
-                            onChange={handleCheckAll}
-                        />
-                    </div>
-                </HeaderCell>
-                <CheckCell dataKey="id" checkedKeys={checkedKeys} onChange={handleCheck} rowData={undefined} />
-            </Column>
-            <Column align="center" fixed sortable>
-                <HeaderCell>Id</HeaderCell>
-                <Cell dataKey="id" />
-            </Column>
 
-            <Column flexGrow={1} align="center" fixed sortable>
-                <HeaderCell>Tiêu đề</HeaderCell>
-                <Cell dataKey="title" />
-            </Column>
-        </Table>
-        <div style={{ padding: 20 }}>
-            <Pagination
-                prev
-                next
-                first
-                last
-                ellipsis
-                boundaryLinks
-                maxButtons={5}
-                size="xs"
-                layout={['total', '-', 'limit', '|', 'pager', 'skip']}
-                total={articles.length}
-                limitOptions={[10, 30, 50]}
-                limit={limit}
-                activePage={page}
-                onChangePage={setPage}
-                onChangeLimit={handleChangeLimit}
-            />
-        </div>
+
+
+
+    const removeArticleArray = (item_id:any) => {
+        const data = articles.filter((item:any) => item.id !== item_id *1);
+        setArticles(data);
+    }
+    return <>
+
+        <Link className={'btn btn-primary'} href={'/article/create'}>Thêm mới</Link>
+        <table className="table table-bordered">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Tiêu đề</th>
+                <th scope="col">Nội dung</th>
+                <th scope="col">Mô tả</th>
+                <th scope="col">Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            {articles.map((article: any) => {
+                return (
+                    <tr key={article.id}>
+                        <th scope="row" key={article.id}>{article.id}</th>
+                        <td>{article.title}</td>
+                        <td>{article.content}</td>
+                        <td>{article.description}</td>
+                        <td>
+                            <div className="btn-group btn-group-sm" role="group" aria-label="Second group">
+                                <Link className="btn btn-warning" href={`/article/edit/${article.id}`}>Sửa</Link>
+                                <button type="button" className="btn btn-danger" onClick={e => handleOpen(e)} data-id={article.id}>Xoá</button>
+                            </div>
+                        </td>
+                    </tr>)
+            })}
+
+            {
+                !articles.length ?
+                    <tr>
+                        <td colSpan={5}>
+                            <span>
+                                Không có bản ghi nào
+                            </span>
+                        </td>
+                    </tr>
+                    :
+                    ''
+            }
+            </tbody>
+        </table>
+        <Modal open={open} onClose={handleClose}>
+            <Modal.Header>
+                <Modal.Title>Modal Title</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <Placeholder.Paragraph />
+            </Modal.Body>
+            <Modal.Footer>
+                <Button onClick={handleDelete} appearance="primary">
+                    Ok
+                </Button>
+                <Button onClick={handleClose} appearance="subtle">
+                    Cancel
+                </Button>
+            </Modal.Footer>
+        </Modal>
     </>
 }

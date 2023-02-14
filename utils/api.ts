@@ -7,8 +7,19 @@ export const post = async (path:string,options = {}) => {
     const res = await request.post(path, options);
     return res.data;
 }
+
 export const get = async (path:string,options = {}) => {
     const res = await request.get(path, {params: options});
+    return res.data;
+}
+
+export const put = async (path:string,options = {}) => {
+    const res = await request.put(path, options);
+    return res.data;
+}
+
+export const destroy = async (path:string,options = {}) => {
+    const res = await request.delete(path, options);
     return res.data;
 }
 export default request
